@@ -56,7 +56,10 @@ def get_fs_file_content(filepath):
 
 
 def get_fs_file_content_json(filepath):
-    return json.loads(get_fs_file_content(filepath))
+    fs_file_content = get_fs_file_content(filepath)
+    if fs_file_content is None:
+        raise RuntimeError(f'The {filepath=} content is None')
+    return json.loads(fs_file_content)
 
 
 def is_file_content_valid(content, object_id):
@@ -102,8 +105,9 @@ def extract_data_recursive(seafile_folder, repo_id, obj_id, tgt_directory):
 
     for dirent in file_content['dirents']:
         cur_path = os.path.join(tgt_directory, dirent['name'])
-        if stat.S_ISREG(dirent['mode']):
-            create_file(seafile_folder, repo_id, dirent['id'], dirent['mtime'], cur_path)
+        dirent_id = dirent['id']
+        if stat.S_ISREG(dirent['mode']) and (dirent_id != EMPTY_SHA1):
+            create_file(seafile_folder, repo_id, dirent_id, dirent['mtime'], cur_path)
         elif stat.S_ISDIR(dirent['mode']):
             os.mkdir(cur_path, 0o777)
             extract_data_recursive(seafile_folder, repo_id, dirent['id'], cur_path)
@@ -135,10 +139,3 @@ def main():
 
 
 main()
-
-
-
-
-
-
-
