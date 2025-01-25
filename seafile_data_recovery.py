@@ -104,13 +104,15 @@ def extract_data_recursive(seafile_folder, repo_id, obj_id, tgt_directory):
     file_content = get_fs_file_content_json(filepath)
 
     for dirent in file_content['dirents']:
-        cur_path = os.path.join(tgt_directory, dirent['name'])
         dirent_id = dirent['id']
-        if stat.S_ISREG(dirent['mode']) and (dirent_id != EMPTY_SHA1):
+        if dirent_id == EMPTY_SHA1:
+            continue
+        cur_path = os.path.join(tgt_directory, dirent['name'])
+        if stat.S_ISREG(dirent['mode']):
             create_file(seafile_folder, repo_id, dirent_id, dirent['mtime'], cur_path)
         elif stat.S_ISDIR(dirent['mode']):
             os.mkdir(cur_path, 0o777)
-            extract_data_recursive(seafile_folder, repo_id, dirent['id'], cur_path)
+            extract_data_recursive(seafile_folder, repo_id, dirent_id, cur_path)
 
 
 def recover_data(seafile_folder, target_folder, repo_id):
