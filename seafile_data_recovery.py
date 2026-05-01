@@ -23,13 +23,13 @@ def build_blocks_folder_path(seafile_folder):
 
 def iget_repo_ids(seafile_folder):
     commits_folder = build_commits_folder_path(seafile_folder)
-    for repo_id in os.listdir(commits_folder):
+    for repo_id in (cf for cf in os.listdir(commits_folder) if not cf.startswith('.')):
         yield repo_id
 
 
 def iget_commit(seafile_folder, repo_id):
     repo_folder = os.path.join(build_commits_folder_path(seafile_folder), repo_id)
-    for prefix in os.listdir(repo_folder):
+    for prefix in (rf for rf in os.listdir(repo_folder) if not rf.startswith('.')):
         for postfix in os.listdir(os.path.join(repo_folder, prefix)):
             with open(os.path.join(repo_folder, prefix, postfix), 'r') as file:
                 commit = json.load(file)
@@ -124,7 +124,7 @@ def recover_data(seafile_folder, target_folder, repo_id):
     print('Commit was found. creator_name: {}, repo_name: {}'.format(commit['creator_name'], commit['repo_name']))
 
     tgt_directory = os.path.join(target_folder, commit['creator_name'], commit['repo_name'])
-    os.makedirs(tgt_directory)
+    os.makedirs(tgt_directory, exist_ok=True)
 
     extract_data_recursive(seafile_folder, repo_id, commit['root_id'], tgt_directory)
 
